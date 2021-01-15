@@ -1,0 +1,21 @@
+{
+  "name": "react-native-modular-datetime-picker",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "dayjs": "^1.10.3",
+    "react-native-responsive-screen": "^1.4.2",
+    "react-native-safe-area-view": "^1.1.1"
+  },
+  "peerDependencies": {
+    "@eva-design/eva": ">1.4.0",
+    "@ui-kitten/components": ">=4.4.1",
+    "@ui-kitten/eva-icons": ">=4.4.1",
+    "react": ">=16.8.3",
+    "react-native": ">=0.60"
+  },
+  "devDependencies": {
+    "prettier": "^2.2.1"
+  }
+}
