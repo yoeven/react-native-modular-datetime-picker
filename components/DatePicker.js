@@ -30,9 +30,14 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
 
   useEffect(() => {
     if (isDisabled(dateValue, mode)) {
-      const newDate = getNearestAvailable(mode, dateValue);
-      setDateView(newDate);
-      onChange({ mode: mode == endMode ? "final" : mode, dateValue: newDate.toDate() });
+      let newDate = getNearestAvailable(mode, dateValue);
+      
+      if(newDate!=null)
+      {
+        setDateView(newDate);
+        onChange({ mode: mode == endMode ? "final" : mode, dateValue: newDate.toDate() });
+      }
+      
     }
   }, [dateValue]);
 
