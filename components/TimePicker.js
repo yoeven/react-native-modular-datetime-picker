@@ -36,7 +36,9 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       if (isDisabled(selectedTime)) {
         selectedTime = getNearestAvailable("hour", selectedTime);
 
-        onChange({ timeValue: selectedTime != null ? selectedTime.toDate() : selectedTime });
+        if (selectedTime != null) {
+          onChange({ timeValue: selectedTime.toDate() });
+        }
       }
 
       resetTimeToCenter(selectedTime);
@@ -44,7 +46,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
   };
 
   const generateDisabled = () => {
-    const blocksToCheck = blocks.filter(block => block.hasOwnProperty("time"));
+    const blocksToCheck = blocks.filter((block) => block.hasOwnProperty("time"));
 
     const _disabledTimes = [];
 
@@ -151,7 +153,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     setCycleList(cycle);
   };
 
-  const resetTimeToCenter = time => {
+  const resetTimeToCenter = (time) => {
     const timeParsed = dayjs(time);
 
     try {
@@ -177,9 +179,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
 
   const getNearestAvailable = (type, value) => {
     const givenValue = dayjs(value);
-    const currentDate = dayjs(dateValue)
-      .hour(givenValue.hour())
-      .minute(givenValue.minute());
+    const currentDate = dayjs(dateValue).hour(givenValue.hour()).minute(givenValue.minute());
 
     if (!isDisabled(dayjs(value))) {
       return dayjs(value);
@@ -188,10 +188,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     switch (type) {
       case "hour":
         for (let i = 0; i < 24; i++) {
-          const valueCheck = currentDate
-            .hour(i)
-            .minute(0)
-            .second(0);
+          const valueCheck = currentDate.hour(i).minute(0).second(0);
           if (!isDisabled(valueCheck)) {
             return valueCheck;
           }
@@ -209,20 +206,14 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
         console.log(currentDate.format("A"));
         if (currentDate.format("A") == "AM") {
           for (let i = 0; i < 12; i++) {
-            const valueCheck = currentDate
-              .hour(i)
-              .minute(0)
-              .second(0);
+            const valueCheck = currentDate.hour(i).minute(0).second(0);
             if (!isDisabled(valueCheck)) {
               return valueCheck;
             }
           }
         } else {
           for (let i = 23; i >= 0; i--) {
-            const valueCheck = currentDate
-              .hour(i)
-              .minute(0)
-              .second(0);
+            const valueCheck = currentDate.hour(i).minute(0).second(0);
             if (!isDisabled(valueCheck)) {
               return valueCheck;
             }
@@ -286,7 +277,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     }
   };
 
-  const isDisabled = timeValue => {
+  const isDisabled = (timeValue) => {
     let t = dayjs(timeValue);
     const currentDate = dayjs(dateValue);
 
@@ -309,13 +300,13 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     return false;
   };
 
-  const getDataValues = async type => {
+  const getDataValues = async (type) => {
     let dataValues = [];
 
     switch (type) {
       case "hour":
         dataValues = await Promise.all(
-          [...Array(12).keys()].map(async item => {
+          [...Array(12).keys()].map(async (item) => {
             const t = item + 1;
             const checkT = dayjs(dateValue)
               .hour(dayjs(dateValue).format("A") == "AM" ? (t == 12 ? 0 : t) : t + 12 == 24 ? 12 : t + 12)
@@ -331,12 +322,10 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
         break;
       case "min":
         dataValues = await Promise.all(
-          [...Array(60).keys()].map(async item => {
+          [...Array(60).keys()].map(async (item) => {
             const t = item.toString().length == 1 ? "0" + item : item;
 
-            const checkT = dayjs(dateValue)
-              .minute(t)
-              .second(0);
+            const checkT = dayjs(dateValue).minute(t).second(0);
 
             let disabled = false;
 
@@ -353,7 +342,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
         );
         break;
       case "cycle":
-        dataValues = ["AM", "PM"].map(item => {
+        dataValues = ["AM", "PM"].map((item) => {
           const t = item;
           let disabled = false;
 
@@ -380,7 +369,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     return [empty, empty, ...dataValues, empty, empty];
   };
 
-  const getSelectonList = type => {
+  const getSelectonList = (type) => {
     let refSelector = null;
     let colIndex = 0;
     let listArray = [];
