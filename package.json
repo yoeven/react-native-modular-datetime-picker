@@ -18,7 +18,7 @@
   "peerDependencies": {
     "@eva-design/eva": ">1.4.0",
     "@ui-kitten/components": ">=4.4.1",
-    "@ui-kitten/eva-icons": ">=4.4.1",
+    "@ui-kitten/eva-icons": ">=4.4.s1",
     "react": ">=16.8.3",
     "react-native": ">=0.60"
   },
