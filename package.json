@@ -1,11 +1,14 @@
 {
   "name": "@yoeven/react-native-modular-datetime-picker",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "index.js",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/yoeven/react-native-modular-datetime-picker.git"
+  },
+  "scripts": {
+    "format": "prettier --write **/*.js"
   },
   "dependencies": {
     "dayjs": "^1.10.3",
