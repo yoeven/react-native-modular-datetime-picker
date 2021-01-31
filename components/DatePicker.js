@@ -31,17 +31,15 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
   useEffect(() => {
     if (isDisabled(dateValue, mode)) {
       let newDate = getNearestAvailable(mode, dateValue);
-      
-      if(newDate!=null)
-      {
+
+      if (newDate != null) {
         setDateView(newDate);
         onChange({ mode: mode == endMode ? "final" : mode, dateValue: newDate.toDate() });
       }
-      
     }
   }, [dateValue]);
 
-  const onChangeCheck = async () => {
+  const onChangeCheck = () => {
     setDataShown(null);
     const data = getDataValues();
     setDataShown(data);
@@ -94,7 +92,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
     return null;
   };
 
-  const onModeChange = newMode => {
+  const onModeChange = (newMode) => {
     setMode(newMode);
   };
 
@@ -179,10 +177,12 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
       const repeat = block.repeat;
       switch (block.type) {
         case "date":
-          if (repeat) {
-            if (d.format("DDMM") == dateCheck.format("DDMM")) return true;
-          } else {
-            if (d.isSame(dateCheck, "date")) return true;
+          if (compareCheck == "date") {
+            if (repeat) {
+              if (d.format("DDMM") == dateCheck.format("DDMM")) return true;
+            } else {
+              if (d.isSame(dateCheck, "date")) return true;
+            }
           }
           break;
         case "week":
@@ -236,7 +236,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
           };
         });
 
-        dataValues = Array.from(Array(days).keys()).map(item => {
+        dataValues = Array.from(Array(days).keys()).map((item) => {
           const d = startOfMonth.add(item, "day");
 
           return {
@@ -246,7 +246,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
           };
         });
 
-        const weekDaysShortMapped = [...weekDaysShort].map(item => {
+        const weekDaysShortMapped = [...weekDaysShort].map((item) => {
           return {
             value: item,
             type: "header",
@@ -297,7 +297,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
     return dataValues;
   };
 
-  const isSelected = date => {
+  const isSelected = (date) => {
     const dateParsed = dayjs(date);
 
     switch (mode) {
@@ -316,7 +316,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
     }
   };
 
-  const onValueSelected = date => {
+  const onValueSelected = (date) => {
     let updatedDate = null;
     switch (mode) {
       case "day":
@@ -325,19 +325,11 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
         break;
       case "month":
         updatedDate = dayjs(dateView).month(dayjs(date).month());
-        updatedDate = updatedDate.date(
-          dayjs(date)
-            .endOf("month")
-            .date()
-        );
+        updatedDate = updatedDate.date(dayjs(date).endOf("month").date());
         break;
       case "year":
         updatedDate = dayjs(dateView).year(dayjs(date).year());
-        updatedDate = updatedDate.month(
-          dayjs(date)
-            .endOf("year")
-            .month()
-        );
+        updatedDate = updatedDate.month(dayjs(date).endOf("year").month());
         break;
     }
 
@@ -350,7 +342,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
     onChange({ mode: mode == endMode ? "final" : mode, dateValue: updatedDate.toDate() });
   };
 
-  const getDateValueToShow = date => {
+  const getDateValueToShow = (date) => {
     const parsedDate = dayjs(date);
     let formattedText = null;
     switch (mode) {
@@ -368,7 +360,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
     return formattedText;
   };
 
-  const changeSet = moveState => {
+  const changeSet = (moveState) => {
     const currentDateView = dayjs(dateView);
     let updatedView = null;
     const amountToMove = moveState == "next" ? 1 : -1;

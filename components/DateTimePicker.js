@@ -6,7 +6,7 @@ import DatePicker from "./DatePicker";
 import TimePicker from "./TimePicker";
 import dayjs from "dayjs";
 
-const DateTimePicker = props => {
+const DateTimePicker = (props) => {
   const { dateValue, onClose, onConfirm, onFinalChange, selectorMode } = props;
   const [showConfirm, setShowConfirm] = useState(true);
   const [dateTimeSelected, setDateTimeSelected] = useState(dateValue);
@@ -24,9 +24,7 @@ const DateTimePicker = props => {
       setShowConfirm(true);
       const newSelected = dayjs(dateValue);
 
-      const updateSelected = dayjs(dateTimeSelected)
-        .year(newSelected.year())
-        .dayOfYear(newSelected.dayOfYear());
+      const updateSelected = dayjs(dateTimeSelected).year(newSelected.year()).dayOfYear(newSelected.dayOfYear());
 
       setDateTimeSelected(updateSelected);
       onFinalChange(updateSelected);
@@ -39,9 +37,7 @@ const DateTimePicker = props => {
     console.log(timeValue);
     if (timeValue != null) {
       const newSelected = dayjs(timeValue);
-      const updateSelected = dayjs(dateTimeSelected)
-        .hour(newSelected.hour())
-        .minute(newSelected.minute());
+      const updateSelected = dayjs(dateTimeSelected).hour(newSelected.hour()).minute(newSelected.minute());
 
       console.log("time update");
 
@@ -56,7 +52,7 @@ const DateTimePicker = props => {
         )}
 
         {showConfirm && selectorMode.includes("time") && (
-          <View style={{ marginTop: hp(3), backgroundColor: "#f8f8f8", borderRadius: 5 }}>
+          <View style={styles.TimeWrapper}>
             <TimePicker {...props} dateValue={dateTimeSelected} onChange={onTimeChange} />
           </View>
         )}
@@ -108,5 +104,10 @@ const styles = StyleSheet.create({
   },
   SuccessButton: {
     backgroundColor: "rgba(1,1,1,0)",
+  },
+  TimeWrapper: {
+    marginTop: hp(3),
+    backgroundColor: "#f8f8f8",
+    borderRadius: 5,
   },
 });
