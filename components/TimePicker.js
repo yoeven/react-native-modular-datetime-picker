@@ -56,7 +56,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       if (isDisabled(selectedTime, _disabledTimes)) {
         const newTime = getNearestAvailable("min", selectedTime, _disabledTimes);
 
-        console.log("changing always");
+        console.log("changing always", _disabledTimes.length);
 
         if (newTime != null) {
           console.log("fix date", newTime.format("LT"));
@@ -136,13 +136,13 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
           const checkTo = dayjs(disabledTime.to);
 
           if (
-            timeCheckFrom.isBetween(checkFrom, checkTo, null, "[]") &&
-            timeCheckTo.isBetween(checkFrom, checkTo, null, "[]")
+            timeCheckFrom.isBetween(checkFrom, checkTo, "minute", "[]") &&
+            timeCheckTo.isBetween(checkFrom, checkTo, "minute", "[]")
           ) {
             updatedTime = true;
           } else if (
-            timeCheckFrom.isBetween(checkFrom, checkTo, null, "[]") ||
-            timeCheckTo.isBetween(checkFrom, checkTo, null, "[]")
+            timeCheckFrom.isBetween(checkFrom, checkTo, "minute", "[]") ||
+            timeCheckTo.isBetween(checkFrom, checkTo, "minute", "[]")
           ) {
             if (timeCheckFrom.isBefore(checkFrom)) {
               _disabledTimes[i].from = timeCheckFrom;
@@ -215,11 +215,11 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     const givenValue = dayjs(value);
     const currentDate = dayjs(dateValue).hour(givenValue.hour()).minute(givenValue.minute());
 
-    console.log("neartest", givenValue.format());
-
     if (!isDisabled(dayjs(value), overwriteDisables)) {
       return dayjs(value);
     }
+
+    console.log("neartest", givenValue.format());
 
     switch (type) {
       case "hour":
@@ -238,7 +238,9 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
             return valueCheck;
           }
         }
-        return getNearestAvailable("hour", value);
+        console.log("can;t find");
+
+        return getNearestAvailable("hour", value, overwriteDisables);
       case "cycle":
         console.log(currentDate.format("A"));
         if (currentDate.format("A") == "AM") {
@@ -256,7 +258,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
             }
           }
         }
-        return getNearestAvailable("hour", value);
+        return getNearestAvailable("hour", value, overwriteDisables);
     }
 
     return null;
@@ -331,7 +333,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     const disabledTimesToCheck = overwriteDisables != null ? overwriteDisables : disabledTimes;
 
     for (const disabledTime of disabledTimesToCheck) {
-      if (t.isBetween(disabledTime.from, disabledTime.to, null, "[]")) {
+      if (t.isBetween(disabledTime.from, disabledTime.to, "minute", "[]")) {
         return true;
       }
     }
