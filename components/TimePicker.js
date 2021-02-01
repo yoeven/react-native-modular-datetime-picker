@@ -85,6 +85,9 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       let timeCheckFrom = dayjs(block.time.from);
       let timeCheckTo = dayjs(block.time.to);
 
+      console.log("timeCheckFrom", timeCheckFrom.format());
+      console.log("timeCheckTo", timeCheckTo.format());
+
       let disabled = false;
 
       let checkValue = dayjs(timeCheckFrom);
@@ -341,7 +344,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
             const t = item + 1;
             const checkT = dayjs(dateValue)
               .hour(dayjs(dateValue).format("A") == "AM" ? (t == 12 ? 0 : t) : t + 12 == 24 ? 12 : t + 12)
-              .minute(0)
+              .minute(59)
               .second(0);
 
             return {

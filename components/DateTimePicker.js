@@ -47,6 +47,12 @@ const DateTimePicker = (props) => {
   const onConfirmSelection = () => {
     if (selectorMode == "datetime" && !showTime) {
       setShowTime(true);
+      setShowConfirm(false);
+
+      setTimeout(() => {
+        setShowConfirm(true);
+      }, 100);
+
       return;
     }
 
