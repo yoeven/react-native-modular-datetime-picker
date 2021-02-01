@@ -10,6 +10,7 @@ const DateTimePicker = (props) => {
   const { dateValue, onClose, onConfirm, onFinalChange, selectorMode } = props;
   const [showConfirm, setShowConfirm] = useState(true);
   const [dateTimeSelected, setDateTimeSelected] = useState(dateValue);
+  const [showTime, setShowTime] = useState(false);
 
   useEffect(() => {
     console.log("datetimepicker loop");
@@ -39,19 +40,45 @@ const DateTimePicker = (props) => {
       const newSelected = dayjs(timeValue);
       const updateSelected = dayjs(dateTimeSelected).hour(newSelected.hour()).minute(newSelected.minute());
 
-      console.log("time update");
-
       setDateTimeSelected(updateSelected);
     }
   };
+
+  const onConfirmSelection = () => {
+    if (selectorMode == "datetime" && !showTime) {
+      setShowTime(true);
+      return;
+    }
+
+    onConfirm(dateTimeSelected);
+  };
+
+  const isDatePickerVisble = () => {
+    if (selectorMode == "datetime" && !showTime) {
+      return true;
+    } else if (selectorMode.includes("date") && selectorMode != "datetime") {
+      return true;
+    }
+
+    return false;
+  };
+
+  const isTimePickerVisible = () => {
+    if (showTime && selectorMode == "datetime") {
+      return true;
+    } else if (selectorMode.includes("time") && selectorMode != "datetime") {
+      return true;
+    }
+
+    return false;
+  };
+
   return (
     <View>
       <View style={styles.InnerContentWrapper}>
-        {selectorMode.includes("date") && (
-          <DatePicker {...props} dateValue={dateTimeSelected} onChange={onDateChange} />
-        )}
+        {isDatePickerVisble() && <DatePicker {...props} dateValue={dateTimeSelected} onChange={onDateChange} />}
 
-        {showConfirm && selectorMode.includes("time") && (
+        {isTimePickerVisible() && (
           <View style={styles.TimeWrapper}>
             <TimePicker {...props} dateValue={dateTimeSelected} onChange={onTimeChange} />
           </View>
@@ -61,7 +88,7 @@ const DateTimePicker = (props) => {
         {showConfirm && (
           <Button
             disabled={!showConfirm}
-            onPress={() => onConfirm(dateTimeSelected)}
+            onPress={onConfirmSelection}
             status={"primary"}
             style={styles.SuccessButton}
             appearance="outline">

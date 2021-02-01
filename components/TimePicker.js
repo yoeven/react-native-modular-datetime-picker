@@ -8,27 +8,47 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
   const HoursFlatList = useRef(null);
   const MinsFlatList = useRef(null);
   const CycleFlatList = useRef(null);
-  const [hourList, setHourList] = useState([]);
-  const [minList, setMinList] = useState([]);
-  const [cycleList, setCycleList] = useState([]);
+  const [hourList, setHourList] = useState(
+    [...Array(16).keys()].map((item) => {
+      return { value: item, type: "time", disabled: true };
+    })
+  );
+  const [minList, setMinList] = useState(
+    [...Array(64).keys()].map((item) => {
+      return { value: item, type: "time", disabled: true };
+    })
+  );
+  const [cycleList, setCycleList] = useState([
+    { value: "AM", type: "time", disabled: true },
+    { value: "PM", type: "time", disabled: true },
+  ]);
   const [disabledTimes, setDisabledTimes] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log("change1");
     generateDisabled();
-  }, [dateValue]);
+  }, [dayjs(dateValue).format("H")]);
 
   useEffect(() => {
+    console.log("change2");
+
+    getAllTimeValues();
+  }, [disabledTimes]);
+
+  useEffect(() => {
+    console.log("change3");
+
     onChangeCheck();
 
     return () => {
       interactionPromise != null && interactionPromise.cancel();
     };
-  }, [disabledTimes]);
+  }, []);
 
   const onChangeCheck = async () => {
-    await getAllTimeValues();
-
     interactionPromise != null && interactionPromise.cancel();
+    console.log("changing called");
 
     interactionPromise = InteractionManager.runAfterInteractions(() => {
       let selectedTime = dayjs(dateValue);
@@ -36,12 +56,21 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       if (isDisabled(selectedTime)) {
         selectedTime = getNearestAvailable("hour", selectedTime);
 
+        console.log("changing always");
+
         if (selectedTime != null) {
           onChange({ timeValue: selectedTime.toDate() });
+          setTimeout(() => {
+            resetTimeToCenter(selectedTime);
+          }, 100);
+
+          return;
         }
       }
 
-      resetTimeToCenter(selectedTime);
+      setTimeout(() => {
+        resetTimeToCenter(selectedTime);
+      }, 100);
     });
   };
 
@@ -139,18 +168,20 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       }
     }
 
-    setDisabledTimes(_disabledTimes);
+    setDisabledTimes([..._disabledTimes]);
 
     // console.log("disabke");
     // _disabledTimes.forEach(item => console.log(item.from.format(), item.to.format()));
   };
 
   const getAllTimeValues = async () => {
+    setLoading(true);
     const [hour, min, cycle] = await Promise.all([getDataValues("hour"), getDataValues("min"), getDataValues("cycle")]);
 
-    setHourList(hour);
-    setMinList(min);
-    setCycleList(cycle);
+    setHourList([...hour]);
+    setMinList([...min]);
+    setCycleList([...cycle]);
+    setLoading(false);
   };
 
   const resetTimeToCenter = (time) => {
@@ -310,6 +341,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
             const t = item + 1;
             const checkT = dayjs(dateValue)
               .hour(dayjs(dateValue).format("A") == "AM" ? (t == 12 ? 0 : t) : t + 12 == 24 ? 12 : t + 12)
+              .minute(0)
               .second(0);
 
             return {
