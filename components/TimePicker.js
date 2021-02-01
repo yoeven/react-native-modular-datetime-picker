@@ -24,46 +24,46 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
   ]);
   const [disabledTimes, setDisabledTimes] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [first, setFirst] = useState(false);
 
   useEffect(() => {
     console.log("change1");
-    generateDisabled();
-  }, [dayjs(dateValue).format("H")]);
+    const _disabledTimes = generateDisabled();
 
-  useEffect(() => {
-    console.log("change2");
+    setDisabledTimes([..._disabledTimes]);
 
-    getAllTimeValues();
-  }, [disabledTimes]);
-
-  useEffect(() => {
-    console.log("change3");
-
-    onChangeCheck();
+    if (!first) {
+      onChangeCheck(_disabledTimes);
+      setFirst(true);
+    }
 
     return () => {
       interactionPromise != null && interactionPromise.cancel();
     };
-  }, []);
+  }, [dayjs(dateValue).format("H")]);
 
-  const onChangeCheck = async () => {
+  useEffect(() => {
+    getAllTimeValues();
+  }, [disabledTimes]);
+
+  const onChangeCheck = async (_disabledTimes) => {
     interactionPromise != null && interactionPromise.cancel();
-    console.log("changing called");
 
     interactionPromise = InteractionManager.runAfterInteractions(() => {
       let selectedTime = dayjs(dateValue);
+      console.log("changing called", selectedTime.format("LT"));
 
-      if (isDisabled(selectedTime)) {
-        selectedTime = getNearestAvailable("hour", selectedTime);
+      if (isDisabled(selectedTime, _disabledTimes)) {
+        const newTime = getNearestAvailable("min", selectedTime, _disabledTimes);
 
         console.log("changing always");
 
-        if (selectedTime != null) {
-          onChange({ timeValue: selectedTime.toDate() });
+        if (newTime != null) {
+          console.log("fix date", newTime.format("LT"));
+          onChange({ timeValue: newTime.toDate() });
           setTimeout(() => {
-            resetTimeToCenter(selectedTime);
+            resetTimeToCenter(newTime);
           }, 100);
-
           return;
         }
       }
@@ -171,7 +171,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       }
     }
 
-    setDisabledTimes([..._disabledTimes]);
+    return _disabledTimes;
 
     // console.log("disabke");
     // _disabledTimes.forEach(item => console.log(item.from.format(), item.to.format()));
@@ -211,19 +211,21 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     }
   };
 
-  const getNearestAvailable = (type, value) => {
+  const getNearestAvailable = (type, value, overwriteDisables = null) => {
     const givenValue = dayjs(value);
     const currentDate = dayjs(dateValue).hour(givenValue.hour()).minute(givenValue.minute());
 
-    if (!isDisabled(dayjs(value))) {
+    console.log("neartest", givenValue.format());
+
+    if (!isDisabled(dayjs(value), overwriteDisables)) {
       return dayjs(value);
     }
 
     switch (type) {
       case "hour":
         for (let i = 0; i < 24; i++) {
-          const valueCheck = currentDate.hour(i).minute(0).second(0);
-          if (!isDisabled(valueCheck)) {
+          const valueCheck = currentDate.hour(i).minute(59).second(0);
+          if (!isDisabled(valueCheck, overwriteDisables)) {
             return valueCheck;
           }
         }
@@ -231,7 +233,8 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       case "min":
         for (let i = 0; i < 60; i++) {
           const valueCheck = currentDate.minute(i).second(0);
-          if (!isDisabled(valueCheck)) {
+
+          if (!isDisabled(valueCheck, overwriteDisables)) {
             return valueCheck;
           }
         }
@@ -241,14 +244,14 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
         if (currentDate.format("A") == "AM") {
           for (let i = 0; i < 12; i++) {
             const valueCheck = currentDate.hour(i).minute(0).second(0);
-            if (!isDisabled(valueCheck)) {
+            if (!isDisabled(valueCheck, overwriteDisables)) {
               return valueCheck;
             }
           }
         } else {
           for (let i = 23; i >= 0; i--) {
             const valueCheck = currentDate.hour(i).minute(0).second(0);
-            if (!isDisabled(valueCheck)) {
+            if (!isDisabled(valueCheck, overwriteDisables)) {
               return valueCheck;
             }
           }
@@ -311,7 +314,7 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     }
   };
 
-  const isDisabled = (timeValue) => {
+  const isDisabled = (timeValue, overwriteDisables = null) => {
     let t = dayjs(timeValue);
     const currentDate = dayjs(dateValue);
 
@@ -325,7 +328,9 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
 
     t = t.year(currentDate.year()).dayOfYear(currentDate.dayOfYear());
 
-    for (const disabledTime of disabledTimes) {
+    const disabledTimesToCheck = overwriteDisables != null ? overwriteDisables : disabledTimes;
+
+    for (const disabledTime of disabledTimesToCheck) {
       if (t.isBetween(disabledTime.from, disabledTime.to, null, "[]")) {
         return true;
       }
