@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
-import { StyleSheet, Text, View, TouchableWithoutFeedback, FlatList, InteractionManager } from "react-native";
+import { StyleSheet, View, FlatList } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import dayjs from "dayjs";
+import TimeSelectionItem from "./TimeSelectionItem";
 
 const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
   let interactionPromise = null;
@@ -23,24 +24,29 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     { value: "PM", type: "time", disabled: true },
   ]);
   const [disabledTimes, setDisabledTimes] = useState([]);
-  const [loading, setLoading] = useState(false);
+
   const [first, setFirst] = useState(false);
 
   useEffect(() => {
-    console.log("change1");
     const _disabledTimes = generateDisabled();
 
     setDisabledTimes([..._disabledTimes]);
 
+    console.log(first);
+
     if (!first) {
-      onChangeCheck(_disabledTimes);
+      console.log("here in");
+
+      setTimeout(() => {
+        onChangeCheck(_disabledTimes);
+      }, 200);
       setFirst(true);
     }
 
     return () => {
       interactionPromise != null && interactionPromise.cancel();
     };
-  }, [dayjs(dateValue).format("H")]);
+  }, [dayjs(dateValue).hour()]);
 
   useEffect(() => {
     getAllTimeValues();
@@ -49,29 +55,27 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
   const onChangeCheck = async (_disabledTimes) => {
     interactionPromise != null && interactionPromise.cancel();
 
-    interactionPromise = InteractionManager.runAfterInteractions(() => {
-      let selectedTime = dayjs(dateValue);
-      console.log("changing called", selectedTime.format("LT"));
+    let selectedTime = dayjs(dateValue);
+    console.log("changing called", selectedTime.format("LT"));
 
-      if (isDisabled(selectedTime, _disabledTimes)) {
-        const newTime = getNearestAvailable("min", selectedTime, _disabledTimes);
+    if (isDisabled(selectedTime, _disabledTimes)) {
+      const newTime = getNearestAvailable("min", selectedTime, _disabledTimes);
 
-        console.log("changing always", _disabledTimes.length);
+      console.log("changing always", _disabledTimes.length);
 
-        if (newTime != null) {
-          console.log("fix date", newTime.format("LT"));
-          onChange({ timeValue: newTime.toDate() });
-          setTimeout(() => {
-            resetTimeToCenter(newTime);
-          }, 100);
-          return;
-        }
+      if (newTime != null) {
+        console.log("fix date", newTime.format("LT"));
+        onChange({ timeValue: newTime.toDate() });
+        setTimeout(() => {
+          resetTimeToCenter(newTime);
+        }, 100);
+        return;
       }
+    }
 
-      setTimeout(() => {
-        resetTimeToCenter(selectedTime);
-      }, 100);
-    });
+    setTimeout(() => {
+      resetTimeToCenter(selectedTime);
+    }, 100);
   };
 
   const generateDisabled = () => {
@@ -178,13 +182,11 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
   };
 
   const getAllTimeValues = async () => {
-    setLoading(true);
     const [hour, min, cycle] = await Promise.all([getDataValues("hour"), getDataValues("min"), getDataValues("cycle")]);
 
     setHourList([...hour]);
     setMinList([...min]);
     setCycleList([...cycle]);
-    setLoading(false);
   };
 
   const resetTimeToCenter = (time) => {
@@ -444,28 +446,13 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
         keyExtractor={(item, index) => index.toString()}
         getItemLayout={(data, index) => ({ length: hp(5), offset: hp(5) * index, index })}
         renderItem={({ item, index }) => (
-          <TouchableWithoutFeedback
-            disabled={item.type != "time" || item.disabled}
-            onPress={() => onValueSelected(type, item.value, index)}>
-            <View
-              style={[
-                styles.DateItemCard,
-                {
-                  opacity: item.type == "time" ? 1 : 0,
-                },
-              ]}>
-              <Text
-                style={
-                  item.disabled
-                    ? styles.DisabledText
-                    : isSelected(type, item.value)
-                    ? styles.SelectedText
-                    : styles.NormalTextDate
-                }>
-                {item.value}
-              </Text>
-            </View>
-          </TouchableWithoutFeedback>
+          <TimeSelectionItem
+            index={index}
+            item={item}
+            onValueSelected={onValueSelected}
+            type={type}
+            isSelected={isSelected(type, item.value)}
+          />
         )}
       />
     );
@@ -492,35 +479,4 @@ TimePicker.defaultProps = {
 
 export default TimePicker;
 
-const styles = StyleSheet.create({
-  BlockCard: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  DateItemCard: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 5,
-    height: hp(5),
-  },
-  NormalTextDate: {
-    fontSize: wp(4),
-    fontFamily: "roboto-regular",
-    color: "black",
-    textAlign: "center",
-  },
-  SelectedText: {
-    fontSize: wp(5),
-    fontFamily: "roboto-bold",
-    color: "#F34E5C",
-    textAlign: "center",
-  },
-  DisabledText: {
-    fontSize: wp(4),
-    fontFamily: "roboto-regular",
-    color: "#ccc",
-    textAlign: "center",
-  },
-});
+const styles = StyleSheet.create({});

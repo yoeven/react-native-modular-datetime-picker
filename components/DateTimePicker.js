@@ -13,11 +13,7 @@ const DateTimePicker = (props) => {
   const [showTime, setShowTime] = useState(false);
 
   useEffect(() => {
-    console.log("datetimepicker loop");
-
     setDateTimeSelected(dayjs(dateValue));
-
-    console.log("dateValue int", dateValue);
   }, [dateValue]);
 
   const onDateChange = ({ mode, dateValue }) => {
@@ -35,7 +31,6 @@ const DateTimePicker = (props) => {
   };
 
   const onTimeChange = ({ timeValue }) => {
-    console.log(timeValue);
     if (timeValue != null) {
       const newSelected = dayjs(timeValue);
       const updateSelected = dayjs(dateTimeSelected).hour(newSelected.hour()).minute(newSelected.minute());

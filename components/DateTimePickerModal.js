@@ -4,7 +4,7 @@ import Modal from "react-native-modal";
 import DateTimePicker from "./DateTimePicker";
 import SafeAreaView from "react-native-safe-area-view";
 
-const CalenderPickerModal = props => {
+const CalenderPickerModal = (props) => {
   const { onClose, isVisible } = props;
 
   return (

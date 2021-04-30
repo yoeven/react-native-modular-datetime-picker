@@ -3,19 +3,28 @@ import { StyleSheet, Text, View, TouchableWithoutFeedback, FlatList } from "reac
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import dayjs from "dayjs";
 import { Icon } from "@ui-kitten/components";
+import DateSelectionItem from "./DateSelectionItem";
 
 const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const weekDaysShort = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+const weekDaysShortMapped = [...weekDaysShort].map((item) => {
+  return {
+    value: item,
+    type: "header",
+  };
+});
 
 const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blocks }) => {
   const [dateView, setDateView] = useState(dateValue);
   const [mode, setMode] = useState(endMode);
   const [columns, setColumns] = useState(7);
   const [dataShown, setDataShown] = useState(null);
+  const [byMonthData, setByMonthData] = useState(null);
 
   useEffect(() => {
-    onChangeCheck();
+    if (!byMonthData) return;
 
+    onChangeCheck();
     switch (mode) {
       case "day":
       case "week":
@@ -26,21 +35,90 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
         setColumns(4);
         break;
     }
-  }, [mode, dateView]);
+  }, [mode, dateView, byMonthData]);
 
   useEffect(() => {
-    if (isDisabled(dateValue, mode)) {
-      let newDate = getNearestAvailable(mode, dateValue);
+    if (byMonthData != null && byMonthData.forYear == dayjs(dateView).year()) return;
+    const result = processByMonths(dateView);
+    setByMonthData(result);
+  }, [dayjs(dateView).year()]);
+
+  const processByMonths = (baseDate) => {
+    console.log("process months");
+    const byMonths = [...monthsShort].map((item, index) => {
+      const d = dayjs(baseDate).month(index).startOf("month");
+
+      const startOfMonth = dayjs(d).startOf("month");
+      const endOfMonth = dayjs(d).endOf("month");
+      const daysInMonth = endOfMonth.diff(startOfMonth, "day") + 1;
+
+      //generate dates
+      let oneDateEnabled = false;
+
+      const byDates = Array.from(Array(daysInMonth).keys()).map((item) => {
+        const d = startOfMonth.add(item, "day");
+
+        const dateDisabled = isDisabled(d, "day");
+
+        if (dateDisabled) oneDateEnabled = true;
+
+        return {
+          value: d,
+          type: "date",
+          disabled: dateDisabled,
+        };
+      });
+
+      //add empty spaces for display of month
+      const startWeekDay = startOfMonth.format("dd");
+      const weekDayStartIndex = weekDaysShort.indexOf(startWeekDay);
+      const startEmptySpace = Array.from(Array(weekDayStartIndex).keys()).map((item, index) => {
+        return {
+          value: item,
+          type: "empty",
+          disabled: true,
+        };
+      });
+      const endWeekDay = endOfMonth.format("dd");
+      const weekDayEndIndex = weekDaysShort.indexOf(endWeekDay);
+      const endEmptySpace = Array.from(
+        Array(weekDayEndIndex == weekDaysShort.length - 1 ? 0 : weekDaysShort.length - (weekDayEndIndex + 1)).keys()
+      ).map((item, index) => {
+        return {
+          value: item,
+          type: "empty",
+          disabled: true,
+        };
+      });
+
+      return {
+        value: d,
+        type: "date",
+        disabled: isDisabled(d, "month") || oneDateEnabled,
+        displayDates: [...weekDaysShortMapped, ...startEmptySpace, ...byDates, ...endEmptySpace],
+        dates: byDates,
+      };
+    });
+
+    return {
+      forYear: dayjs(baseDate).year(),
+      months: byMonths,
+    };
+  };
+
+  const onChangeCheck = () => {
+    console.log(dayjs(dateView).format(), mode);
+    if (isDisabled(dateView, mode)) {
+      console.log("inside");
+      const newDate = getNearestAvailable(mode, dateView);
 
       if (newDate != null) {
         setDateView(newDate);
         onChange({ mode: mode == endMode ? "final" : mode, dateValue: newDate.toDate() });
+        return;
       }
     }
-  }, [dateValue]);
 
-  const onChangeCheck = () => {
-    setDataShown(null);
     const data = getDataValues();
     setDataShown(data);
   };
@@ -55,27 +133,22 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
     switch (type) {
       case "week":
       case "day":
-        for (let i = 1; i < givenValue.daysInMonth(); i++) {
-          const valueCheck = givenValue.date(i);
-          if (!isDisabled(valueCheck)) {
-            return valueCheck;
+        for (let i = givenValue.month(); i < 12; i++) {
+          const monthData = byMonthData.months[i];
+
+          if (monthData.disabled) continue;
+          for (let m = givenValue.month() == i ? givenValue.date() : 0; i < givenValue.daysInMonth() - 1; i++) {
+            if (!monthData.dates[m].disabled) {
+              return givenValue.month(i).date(m + 1);
+            }
           }
         }
-        return getNearestAvailable("month", value);
-      // case "week":
-      //   for (let i = 0; i < 31; i++) {
-      //     const valueCheck = givenValue.add(i, "day");
-
-      //     if (!isDisabled(valueCheck)) {
-      //       return valueCheck;
-      //     }
-      //   }
-      //   return getNearestAvailable("month", value);
+        return getNearestAvailable("year", value);
       case "month":
-        for (let i = 0; i < 12; i++) {
-          const valueCheck = givenValue.month(i);
-          if (!isDisabled(valueCheck)) {
-            return valueCheck;
+        for (let i = givenValue.month(); i < 12; i++) {
+          const monthData = byMonthData.months[i];
+          if (!monthData.disabled) {
+            return getNearestAvailable("day", givenValue.month(i).startOf("month"));
           }
         }
         return getNearestAvailable("year", value);
@@ -88,7 +161,6 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
         }
         break;
     }
-
     return null;
   };
 
@@ -110,6 +182,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
       onModeChange(modeFoward);
     }
   };
+
   const onModeBackward = () => {
     let modeBack = null;
     switch (mode) {
@@ -212,59 +285,10 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
     switch (mode) {
       case "day":
       case "week":
-        const startOfMonth = dayjs(dateView).startOf("month");
-        const endOfMonth = dayjs(dateView).endOf("month");
-        const days = endOfMonth.diff(startOfMonth, "day") + 1;
-        const startWeekDay = startOfMonth.format("dd");
-        const weekDayStartIndex = weekDaysShort.indexOf(startWeekDay);
-        const startEmptySpace = Array.from(Array(weekDayStartIndex).keys()).map((item, index) => {
-          return {
-            value: item,
-            type: "empty",
-            disabled: true,
-          };
-        });
-        const endWeekDay = endOfMonth.format("dd");
-        const weekDayEndIndex = weekDaysShort.indexOf(endWeekDay);
-        const endEmptySpace = Array.from(
-          Array(weekDayEndIndex == weekDaysShort.length - 1 ? 0 : weekDaysShort.length - (weekDayEndIndex + 1)).keys()
-        ).map((item, index) => {
-          return {
-            value: item,
-            type: "empty",
-            disabled: true,
-          };
-        });
-
-        dataValues = Array.from(Array(days).keys()).map((item) => {
-          const d = startOfMonth.add(item, "day");
-
-          return {
-            value: d,
-            type: "date",
-            disabled: isDisabled(d, mode),
-          };
-        });
-
-        const weekDaysShortMapped = [...weekDaysShort].map((item) => {
-          return {
-            value: item,
-            type: "header",
-          };
-        });
-
-        dataValues = [...weekDaysShortMapped, ...startEmptySpace, ...dataValues, ...endEmptySpace];
+        dataValues = byMonthData.months[dayjs(dateView).month()].displayDates;
         break;
       case "month":
-        dataValues = [...monthsShort].map((item, index) => {
-          const d = dayjs(dateView).month(index);
-
-          return {
-            value: d,
-            type: "date",
-            disabled: isDisabled(d, mode),
-          };
-        });
+        dataValues = byMonthData.months;
         break;
       case "year":
         let yearStart = dayjs();
@@ -324,12 +348,10 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
         updatedDate = dayjs(date);
         break;
       case "month":
-        updatedDate = dayjs(dateView).month(dayjs(date).month());
-        updatedDate = updatedDate.date(dayjs(date).endOf("month").date());
+        updatedDate = dayjs(dateView).month(dayjs(date).month()).date(1);
         break;
       case "year":
-        updatedDate = dayjs(dateView).year(dayjs(date).year());
-        updatedDate = updatedDate.month(dayjs(date).endOf("year").month());
+        updatedDate = dayjs(dateView).year(dayjs(date).year()).month(0).date(1);
         break;
     }
 
@@ -419,37 +441,14 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
           numColumns={columns}
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => (
-            <View style={{ marginLeft: index % columns !== 0 ? wp(3) : 0, flex: 1 }}>
-              {index < 7 && item.type == "header" ? (
-                <View style={[styles.BlockCard]}>
-                  <Text style={{ color: "grey", fontSize: wp(4), fontFamily: "roboto-regular" }}>{item.value}</Text>
-                </View>
-              ) : (
-                <TouchableWithoutFeedback
-                  disabled={item.type != "date" || item.disabled}
-                  onPress={() => onValueSelected(item.value)}>
-                  <View
-                    style={[
-                      styles.DateItemCard,
-                      {
-                        backgroundColor: isSelected(item.value) ? "#F34E5C" : undefined,
-                        opacity: item.type == "date" ? 1 : 0,
-                      },
-                    ]}>
-                    <Text
-                      style={
-                        item.disabled
-                          ? styles.DisabledText
-                          : isSelected(item.value)
-                          ? styles.SelectedText
-                          : styles.NormalTextDate
-                      }>
-                      {getDateValueToShow(item.value)}
-                    </Text>
-                  </View>
-                </TouchableWithoutFeedback>
-              )}
-            </View>
+            <DateSelectionItem
+              index={index}
+              item={item}
+              columns={columns}
+              onValueSelected={onValueSelected}
+              isSelected={isSelected(item.value)}
+              dateValueToShow={getDateValueToShow(item.value)}
+            />
           )}
         />
       )}
@@ -469,37 +468,4 @@ CalenderPicker.defaultProps = {
 
 export default CalenderPicker;
 
-const styles = StyleSheet.create({
-  BlockCard: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  DateItemCard: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: wp(2),
-    paddingVertical: hp(1),
-    // aspectRatio: 1,
-    borderRadius: 5,
-  },
-  NormalTextDate: {
-    fontSize: wp(4),
-    fontFamily: "roboto-regular",
-    color: "black",
-    textAlign: "center",
-  },
-  SelectedText: {
-    fontSize: wp(4),
-    fontFamily: "roboto-bold",
-    color: "white",
-    textAlign: "center",
-  },
-  DisabledText: {
-    fontSize: wp(4),
-    fontFamily: "roboto-regular",
-    color: "#ddd",
-    textAlign: "center",
-  },
-});
+const styles = StyleSheet.create({});
