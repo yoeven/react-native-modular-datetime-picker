@@ -414,7 +414,7 @@ const DatePicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blo
     setDateView(updatedView);
   };
 
-  if (loading) return <LoaderView />;
+  // if (loading) return <LoaderView />;
 
   return (
     <View>
