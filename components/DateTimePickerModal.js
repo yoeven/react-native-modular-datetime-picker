@@ -1,4 +1,4 @@
-import React from "react";
+import React, { meno } from "react";
 import { StyleSheet, View } from "react-native";
 import Modal from "react-native-modal";
 import DateTimePicker from "./DateTimePicker";

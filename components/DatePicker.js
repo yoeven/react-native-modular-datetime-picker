@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, memo } from "react";
 import { StyleSheet, Text, View, TouchableWithoutFeedback, FlatList } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import dayjs from "dayjs";
@@ -23,7 +23,6 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
 
   useEffect(() => {
     if (!byMonthData) return;
-
     onChangeCheck();
     switch (mode) {
       case "day":
@@ -35,7 +34,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
         setColumns(4);
         break;
     }
-  }, [mode, dateView, byMonthData]);
+  }, [mode, dateView, byMonthData, dateValue]);
 
   useEffect(() => {
     if (byMonthData != null && byMonthData.forYear == dayjs(dateView).year()) return;
@@ -44,7 +43,6 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
   }, [dayjs(dateView).year()]);
 
   const processByMonths = (baseDate) => {
-    console.log("process months");
     const byMonths = [...monthsShort].map((item, index) => {
       const d = dayjs(baseDate).month(index).startOf("month");
 
@@ -60,7 +58,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
 
         const dateDisabled = isDisabled(d, "day");
 
-        if (dateDisabled) oneDateEnabled = true;
+        if (!dateDisabled) oneDateEnabled = true;
 
         return {
           value: d,
@@ -94,7 +92,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
       return {
         value: d,
         type: "date",
-        disabled: isDisabled(d, "month") || oneDateEnabled,
+        disabled: isDisabled(d, "month") || !oneDateEnabled,
         displayDates: [...weekDaysShortMapped, ...startEmptySpace, ...byDates, ...endEmptySpace],
         dates: byDates,
       };
@@ -107,10 +105,8 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
   };
 
   const onChangeCheck = () => {
-    console.log(dayjs(dateView).format(), mode);
-    if (isDisabled(dateView, mode)) {
-      console.log("inside");
-      const newDate = getNearestAvailable(mode, dateView);
+    if (isDisabled(dateValue, mode)) {
+      const newDate = getNearestAvailable(mode, dateValue);
 
       if (newDate != null) {
         setDateView(newDate);
@@ -466,6 +462,6 @@ CalenderPicker.defaultProps = {
   blocks: [],
 };
 
-export default CalenderPicker;
+export default memo(CalenderPicker);
 
 const styles = StyleSheet.create({});
