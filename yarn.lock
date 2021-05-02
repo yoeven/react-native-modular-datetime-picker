@@ -12,6 +12,11 @@ hoist-non-react-statics@^2.3.1:
   resolved "https://registry.yarnpkg.com/hoist-non-react-statics/-/hoist-non-react-statics-2.5.5.tgz#c5903cf409c0dfd908f388e619d86b9c1174cb47"
   integrity sha512-rqcy4pJo55FTTLWt+bU8ukscqHeE/e9KWvsOW2b/a3afxQZhwkQdT1rPPCJ0rYXdj4vNcasY8zHTH+jF/qStxw==
 
+next-frame@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/next-frame/-/next-frame-0.2.3.tgz#58bee5d1213b31b3cf2c064685388118d32c4794"
+  integrity sha1-WL7l0SE7MbPPLAZGhTiBGNMsR5Q=
+
 prettier@^2.2.1:
   version "2.2.1"
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.2.1.tgz#795a1a78dd52f073da0cd42b21f9c91381923ff5"

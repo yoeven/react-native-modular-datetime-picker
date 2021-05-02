@@ -1,7 +1,7 @@
 {
   "name": "@yoeven/react-native-modular-datetime-picker",
   "description": "A pure JS react-native modular & mordern datetime picker",
-  "version": "1.4.3",
+  "version": "1.4.4",
   "main": "index.js",
   "license": "MIT",
   "repository": {
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "dayjs": "^1.10.3",
+    "next-frame": "^0.2.3",
     "react-native-responsive-screen": "^1.4.2",
     "react-native-safe-area-view": "^1.1.1"
   },
