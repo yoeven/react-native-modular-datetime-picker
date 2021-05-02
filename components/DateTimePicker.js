@@ -118,7 +118,7 @@ DateTimePicker.defaultProps = {
   selectorMode: "datetime",
 };
 
-export default DateTimePicker;
+export default memo(DateTimePicker);
 
 const styles = StyleSheet.create({
   InnerContentWrapper: {

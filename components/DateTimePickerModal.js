@@ -4,7 +4,7 @@ import Modal from "react-native-modal";
 import DateTimePicker from "./DateTimePicker";
 import SafeAreaView from "react-native-safe-area-view";
 
-const CalenderPickerModal = (props) => {
+const DateTimePickerModal = (props) => {
   const { onClose, isVisible } = props;
 
   return (
@@ -26,12 +26,12 @@ const CalenderPickerModal = (props) => {
   );
 };
 
-CalenderPickerModal.defaultProps = {
+DateTimePickerModal.defaultProps = {
   onClose: () => {},
   isVisible: true,
 };
 
-export default CalenderPickerModal;
+export default meno(DateTimePickerModal);
 
 const styles = StyleSheet.create({
   ModalWrapper: {

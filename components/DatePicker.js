@@ -14,7 +14,7 @@ const weekDaysShortMapped = [...weekDaysShort].map((item) => {
   };
 });
 
-const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blocks }) => {
+const DatePicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blocks }) => {
   const [dateView, setDateView] = useState(dateValue);
   const [mode, setMode] = useState(endMode);
   const [columns, setColumns] = useState(7);
@@ -452,7 +452,7 @@ const CalenderPicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange,
   );
 };
 
-CalenderPicker.defaultProps = {
+DatePicker.defaultProps = {
   dateValue: new Date(),
   endMode: "day",
   fixed: false,
@@ -462,6 +462,6 @@ CalenderPicker.defaultProps = {
   blocks: [],
 };
 
-export default memo(CalenderPicker);
+export default memo(DatePicker);
 
 const styles = StyleSheet.create({});
