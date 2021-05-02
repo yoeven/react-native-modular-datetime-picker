@@ -1,4 +1,4 @@
-import React, { meno } from "react";
+import React, { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import Modal from "react-native-modal";
 import DateTimePicker from "./DateTimePicker";
@@ -31,7 +31,7 @@ DateTimePickerModal.defaultProps = {
   isVisible: true,
 };
 
-export default meno(DateTimePickerModal);
+export default memo(DateTimePickerModal);
 
 const styles = StyleSheet.create({
   ModalWrapper: {

@@ -3,6 +3,8 @@ import { View, FlatList } from "react-native";
 import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-native-responsive-screen";
 import dayjs from "dayjs";
 import TimeSelectionItem from "./TimeSelectionItem";
+import nextFrame from "next-frame";
+import LoaderView from "./LoaderView";
 
 const empty = { value: "b", type: "empty", disabled: true };
 
@@ -18,10 +20,10 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     { value: "PM", type: "time", disabled: true },
   ]);
   const [byHourData, setByHourData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const result = processByHours(dateValue);
-    setByHourData(result);
+    init();
   }, []);
 
   useEffect(() => {
@@ -34,45 +36,59 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
     getAllTimeValues();
   }, [byHourData, dayjs(dateValue).hour()]);
 
-  const processByHours = (baseDate) => {
-    const byHours = [...Array(24).keys()].map((item) => {
-      const h = item;
-      const checkHour = dayjs(baseDate).hour(h).minute(59).second(0);
+  const init = async () => {
+    setLoading(true);
+    const result = await processByHours(dateValue);
+    setByHourData(result);
+    setLoading(false);
+  };
 
-      let oneMinEnabled = false;
+  const processByHours = async (baseDate) => {
+    const byHours = await Promise.all(
+      [...Array(24).keys()].map(async (item) => {
+        await nextFrame();
+        const h = item;
+        const checkHour = dayjs(baseDate).hour(h).minute(59).second(0);
 
-      const byMinutes = [...Array(60).keys()].map((item) => {
-        const checkMin = dayjs(checkHour).minute(item).second(0);
+        let oneMinEnabled = false;
 
-        const disabled = generateDisabled(checkMin);
+        const byMinutes = await Promise.all(
+          [...Array(60).keys()].map(async (item) => {
+            await nextFrame();
 
-        if (!disabled) oneMinEnabled = true;
+            const checkMin = dayjs(checkHour).minute(item).second(0);
+
+            const disabled = generateDisabled(checkMin);
+
+            if (!disabled) oneMinEnabled = true;
+
+            return {
+              value: item,
+              type: "time",
+              disabled: disabled,
+            };
+          })
+        );
+
+        const displayMinutes = byMinutes.map((item) => {
+          const minValue = item.value;
+          const valueStringFormat = minValue.toString().length == 1 ? "0" + minValue : minValue;
+
+          return {
+            ...item,
+            value: valueStringFormat,
+          };
+        });
 
         return {
-          value: item,
+          value: h,
           type: "time",
-          disabled: disabled,
+          disabled: oneMinEnabled == false,
+          minutes: byMinutes,
+          displayMinutes: displayMinutes,
         };
-      });
-
-      const displayMinutes = byMinutes.map((item) => {
-        const minValue = item.value;
-        const valueStringFormat = minValue.toString().length == 1 ? "0" + minValue : minValue;
-
-        return {
-          ...item,
-          value: valueStringFormat,
-        };
-      });
-
-      return {
-        value: h,
-        type: "time",
-        disabled: oneMinEnabled == false,
-        minutes: byMinutes,
-        displayMinutes: displayMinutes,
-      };
-    });
+      })
+    );
 
     return byHours;
   };
@@ -388,6 +404,8 @@ const TimePicker = ({ dateValue, minDate, maxDate, onChange, blocks }) => {
       />
     );
   };
+
+  if (loading) return <LoaderView />;
 
   return (
     <View>

@@ -4,6 +4,9 @@ import { widthPercentageToDP as wp, heightPercentageToDP as hp } from "react-nat
 import dayjs from "dayjs";
 import { Icon } from "@ui-kitten/components";
 import DateSelectionItem from "./DateSelectionItem";
+//https://corbt.com/posts/2015/12/22/breaking-up-heavy-processing-in-react-native.html
+import nextFrame from "next-frame";
+import LoaderView from "./LoaderView";
 
 const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const weekDaysShort = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -20,6 +23,7 @@ const DatePicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blo
   const [columns, setColumns] = useState(7);
   const [dataShown, setDataShown] = useState(null);
   const [byMonthData, setByMonthData] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!byMonthData) return;
@@ -37,66 +41,79 @@ const DatePicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blo
   }, [mode, dateView, byMonthData, dateValue]);
 
   useEffect(() => {
-    if (byMonthData != null && byMonthData.forYear == dayjs(dateView).year()) return;
-    const result = processByMonths(dateView);
-    setByMonthData(result);
+    init();
   }, [dayjs(dateView).year()]);
 
-  const processByMonths = (baseDate) => {
-    const byMonths = [...monthsShort].map((item, index) => {
-      const d = dayjs(baseDate).month(index).startOf("month");
+  const init = async () => {
+    if (byMonthData != null && byMonthData.forYear == dayjs(dateView).year()) return;
+    setLoading(true);
+    const result = await processByMonths(dateView);
+    setByMonthData(result);
+    setLoading(false);
+  };
 
-      const startOfMonth = dayjs(d).startOf("month");
-      const endOfMonth = dayjs(d).endOf("month");
-      const daysInMonth = endOfMonth.diff(startOfMonth, "day") + 1;
+  const processByMonths = async (baseDate) => {
+    const byMonths = await Promise.all(
+      [...monthsShort].map(async (item, index) => {
+        await nextFrame();
+        const d = dayjs(baseDate).month(index).startOf("month");
 
-      //generate dates
-      let oneDateEnabled = false;
+        const startOfMonth = dayjs(d).startOf("month");
+        const endOfMonth = dayjs(d).endOf("month");
+        const daysInMonth = endOfMonth.diff(startOfMonth, "day") + 1;
 
-      const byDates = Array.from(Array(daysInMonth).keys()).map((item) => {
-        const d = startOfMonth.add(item, "day");
+        //generate dates
+        let oneDateEnabled = false;
 
-        const dateDisabled = isDisabled(d, "day");
+        const byDates = await Promise.all(
+          Array.from(Array(daysInMonth).keys()).map(async (item) => {
+            await nextFrame();
 
-        if (!dateDisabled) oneDateEnabled = true;
+            const d = startOfMonth.add(item, "day");
+
+            const dateDisabled = isDisabled(d, "day");
+
+            if (!dateDisabled) oneDateEnabled = true;
+
+            return {
+              value: d,
+              type: "date",
+              disabled: dateDisabled,
+            };
+          })
+        );
+
+        //add empty spaces for display of month
+        const startWeekDay = startOfMonth.format("dd");
+        const weekDayStartIndex = weekDaysShort.indexOf(startWeekDay);
+        const startEmptySpace = Array.from(Array(weekDayStartIndex).keys()).map((item, index) => {
+          return {
+            value: item,
+            type: "empty",
+            disabled: true,
+          };
+        });
+        const endWeekDay = endOfMonth.format("dd");
+        const weekDayEndIndex = weekDaysShort.indexOf(endWeekDay);
+        const endEmptySpace = Array.from(
+          Array(weekDayEndIndex == weekDaysShort.length - 1 ? 0 : weekDaysShort.length - (weekDayEndIndex + 1)).keys()
+        ).map((item, index) => {
+          return {
+            value: item,
+            type: "empty",
+            disabled: true,
+          };
+        });
 
         return {
           value: d,
           type: "date",
-          disabled: dateDisabled,
+          disabled: isDisabled(d, "month") || !oneDateEnabled,
+          displayDates: [...weekDaysShortMapped, ...startEmptySpace, ...byDates, ...endEmptySpace],
+          dates: byDates,
         };
-      });
-
-      //add empty spaces for display of month
-      const startWeekDay = startOfMonth.format("dd");
-      const weekDayStartIndex = weekDaysShort.indexOf(startWeekDay);
-      const startEmptySpace = Array.from(Array(weekDayStartIndex).keys()).map((item, index) => {
-        return {
-          value: item,
-          type: "empty",
-          disabled: true,
-        };
-      });
-      const endWeekDay = endOfMonth.format("dd");
-      const weekDayEndIndex = weekDaysShort.indexOf(endWeekDay);
-      const endEmptySpace = Array.from(
-        Array(weekDayEndIndex == weekDaysShort.length - 1 ? 0 : weekDaysShort.length - (weekDayEndIndex + 1)).keys()
-      ).map((item, index) => {
-        return {
-          value: item,
-          type: "empty",
-          disabled: true,
-        };
-      });
-
-      return {
-        value: d,
-        type: "date",
-        disabled: isDisabled(d, "month") || !oneDateEnabled,
-        displayDates: [...weekDaysShortMapped, ...startEmptySpace, ...byDates, ...endEmptySpace],
-        dates: byDates,
-      };
-    });
+      })
+    );
 
     return {
       forYear: dayjs(baseDate).year(),
@@ -396,6 +413,8 @@ const DatePicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blo
     }
     setDateView(updatedView);
   };
+
+  if (loading) return <LoaderView />;
 
   return (
     <View>
