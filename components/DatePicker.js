@@ -150,7 +150,7 @@ const DatePicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blo
           const monthData = byMonthData.months[i];
 
           if (monthData.disabled) continue;
-          for (let m = givenValue.month() == i ? givenValue.date() : 0; i < givenValue.daysInMonth() - 1; i++) {
+          for (let m = givenValue.month() == i ? givenValue.date() : 0; m < givenValue.daysInMonth() - 1; m++) {
             if (!monthData.dates[m].disabled) {
               return givenValue.month(i).date(m + 1);
             }
