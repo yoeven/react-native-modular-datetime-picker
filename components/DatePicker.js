@@ -6,7 +6,6 @@ import { Icon } from "@ui-kitten/components";
 import DateSelectionItem from "./DateSelectionItem";
 //https://corbt.com/posts/2015/12/22/breaking-up-heavy-processing-in-react-native.html
 import nextFrame from "next-frame";
-import LoaderView from "./LoaderView";
 
 const monthsShort = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 const weekDaysShort = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
@@ -169,7 +168,7 @@ const DatePicker = ({ dateValue, endMode, fixed, minDate, maxDate, onChange, blo
         for (let i = 0; i < 12; i++) {
           const valueCheck = givenValue.add(i, "year");
           if (!isDisabled(valueCheck)) {
-            return valueCheck;
+            return getNearestAvailable("month", valueCheck.month(0));
           }
         }
         break;

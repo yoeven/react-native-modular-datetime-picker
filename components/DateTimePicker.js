@@ -7,7 +7,7 @@ import TimePicker from "./TimePicker";
 import dayjs from "dayjs";
 
 const DateTimePicker = (props) => {
-  const { dateValue, onClose, onConfirm, onFinalChange, selectorMode } = props;
+  const { dateValue, onClose, onConfirm, onFinalChange, selectorMode, confirmText, cancelText } = props;
   const [showConfirm, setShowConfirm] = useState(true);
   const [dateTimeSelected, setDateTimeSelected] = useState(dateValue);
   const [showTime, setShowTime] = useState(false);
@@ -93,7 +93,7 @@ const DateTimePicker = (props) => {
             status={"primary"}
             style={styles.SuccessButton}
             appearance="outline">
-            {"Confirm"}
+            {confirmText || "Confirm"}
           </Button>
         )}
 
@@ -103,7 +103,7 @@ const DateTimePicker = (props) => {
           status={"primary"}
           textStyle={{ color: "grey" }}
           appearance="ghost">
-          {"Cancel"}
+          {cancelText || "Cancel"}
         </Button>
       </View>
     </View>
